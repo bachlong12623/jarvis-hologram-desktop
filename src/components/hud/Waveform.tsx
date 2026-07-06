@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { perf } from '../../utils/performanceMode'
 
 type WaveformProps = {
   width?: number
@@ -16,8 +17,16 @@ export function Waveform({ width = 280, height = 60 }: WaveformProps) {
     if (!ctx) return
 
     let frame: number
+    let lastDraw = 0
+    const frameMs = 1000 / perf.waveformFps
 
-    const draw = () => {
+    const draw = (now: number) => {
+      frame = requestAnimationFrame(draw)
+
+      if (document.hidden) return
+      if (now - lastDraw < frameMs) return
+      lastDraw = now
+
       phaseRef.current += 0.04
       const phase = phaseRef.current
       const w = canvas.width
@@ -53,11 +62,9 @@ export function Waveform({ width = 280, height = 60 }: WaveformProps) {
       ctx.moveTo(0, h / 2)
       ctx.lineTo(w, h / 2)
       ctx.stroke()
-
-      frame = requestAnimationFrame(draw)
     }
 
-    draw()
+    frame = requestAnimationFrame(draw)
     return () => cancelAnimationFrame(frame)
   }, [height])
 

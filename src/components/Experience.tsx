@@ -10,6 +10,8 @@ import { BlendFunction } from 'postprocessing'
 import * as THREE from 'three'
 import type { RefObject } from 'react'
 import type { MousePosition } from '../hooks/useMouseParallax'
+import { perf } from '../utils/performanceMode'
+import { RenderLoop } from './RenderLoop'
 import { HologramSphere } from './HologramSphere'
 import { DataStreams } from './DataStreams'
 import { CircuitPlatform } from './CircuitPlatform'
@@ -55,15 +57,19 @@ function Scene({ mouseRef }: { mouseRef: RefObject<MousePosition> }) {
 
       <EffectComposer multisampling={0}>
         <Bloom
-          intensity={1.15}
+          intensity={perf.bloomIntensity}
           luminanceThreshold={0.28}
           luminanceSmoothing={0.85}
-          mipmapBlur
+          mipmapBlur={perf.bloomMipmapBlur}
         />
-        <ChromaticAberration
-          blendFunction={BlendFunction.NORMAL}
-          offset={new THREE.Vector2(0.0005, 0.0005)}
-        />
+        {perf.chromaticAberration ? (
+          <ChromaticAberration
+            blendFunction={BlendFunction.NORMAL}
+            offset={new THREE.Vector2(0.0005, 0.0005)}
+          />
+        ) : (
+          <></>
+        )}
         <Vignette eskil={false} offset={0.15} darkness={0.65} />
       </EffectComposer>
     </>
@@ -81,9 +87,15 @@ export function Experience({ mouseRef }: ExperienceProps) {
     <div ref={containerRef} className="experience">
       <Canvas
         camera={{ position: [0, 0, 4.5], fov: 45 }}
-        dpr={[1, 1.5]}
-        gl={{ antialias: true, alpha: false }}
+        dpr={perf.dpr}
+        frameloop={perf.isWallpaper ? 'demand' : 'always'}
+        gl={{
+          antialias: perf.antialias,
+          alpha: false,
+          powerPreference: perf.isWallpaper ? 'low-power' : 'high-performance',
+        }}
       >
+        {perf.isWallpaper && <RenderLoop fps={perf.targetFps} />}
         <Scene mouseRef={mouseRef} />
       </Canvas>
     </div>

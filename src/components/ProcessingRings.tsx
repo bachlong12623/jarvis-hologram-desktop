@@ -1,6 +1,7 @@
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import { perf } from '../utils/performanceMode'
 
 function createTickRing(radius: number, ticks: number, tickLen: number) {
   const positions: number[] = []
@@ -27,6 +28,7 @@ export function ProcessingRings() {
 
   const tickGeo1 = useMemo(() => createTickRing(1.45, 36, 0.06), [])
   const tickGeo2 = useMemo(() => createTickRing(1.72, 24, 0.05), [])
+  const ringSegments = perf.ringSegments
 
   useFrame((_, delta) => {
     if (ring1Ref.current) {
@@ -49,7 +51,7 @@ export function ProcessingRings() {
     <group>
       <group rotation={[Math.PI / 2, 0, 0]}>
         <lineLoop ref={ring1Ref}>
-          <circleGeometry args={[1.45, 64]} />
+          <circleGeometry args={[1.45, ringSegments]} />
           <lineBasicMaterial color="#4de8ff" transparent opacity={0.35} blending={THREE.AdditiveBlending} />
         </lineLoop>
         <lineSegments ref={tick1Ref} geometry={tickGeo1}>
@@ -59,7 +61,7 @@ export function ProcessingRings() {
 
       <group rotation={[Math.PI / 3.5, Math.PI / 5, 0]}>
         <lineLoop ref={ring2Ref}>
-          <circleGeometry args={[1.72, 64]} />
+          <circleGeometry args={[1.72, ringSegments]} />
           <lineBasicMaterial color="#4de8ff" transparent opacity={0.35} blending={THREE.AdditiveBlending} />
         </lineLoop>
         <lineSegments ref={tick2Ref} geometry={tickGeo2}>

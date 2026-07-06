@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import type { SystemMetrics } from '../types/systemMetrics'
 import { generateSparkline } from '../utils/hudData'
+import { perf } from '../utils/performanceMode'
 
 const METRICS_URL = import.meta.env.VITE_METRICS_URL ?? ''
 const API_BASE = METRICS_URL || (import.meta.env.DEV ? '' : 'http://127.0.0.1:3742')
-const POLL_MS = 1000
+const POLL_MS = perf.metricsPollMs
 
 const FALLBACK: SystemMetrics = {
   connected: false,

@@ -76,6 +76,26 @@ body::before {
   opacity: 0.5;
 }
 
+html.wallpaper-mode .hud-scanline {
+  opacity: 0.2;
+}
+
+html.wallpaper-mode .magic-circle-outer {
+  animation-duration: 180s;
+}
+
+html.wallpaper-mode .magic-circle-inner {
+  animation-duration: 80s;
+}
+
+html.wallpaper-mode .talisman-orbit-ring-1 {
+  animation-duration: 60s;
+}
+
+html.wallpaper-mode .talisman-orbit-ring-2 {
+  animation-duration: 80s;
+}
+
 /* Corner brackets */
 
 .hud-frame {

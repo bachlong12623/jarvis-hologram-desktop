@@ -70,10 +70,17 @@ function hexagonLoop(radius: number) {
 }
 
 export function MagicCircle() {
+  const rootRef = useRef<THREE.Group>(null)
   const outerRef = useRef<THREE.Group>(null)
   const midRef = useRef<THREE.Group>(null)
   const innerRef = useRef<THREE.Group>(null)
   const starRef = useRef<THREE.LineSegments>(null)
+  const tumbleSpeed = useRef({
+    x: 0.22 + Math.random() * 0.12,
+    y: 0.18 + Math.random() * 0.14,
+    z: 0.14 + Math.random() * 0.1,
+  })
+  const nextSpeedChange = useRef(4 + Math.random() * 3)
 
   const pentagramGeo = useMemo(() => pentagramLines(1.25), [])
   const runeGeo = useMemo(() => runeRing(1.55, 48, 0.08), [])
@@ -85,7 +92,26 @@ export function MagicCircle() {
     return geo
   }, [])
 
-  useFrame((_, delta) => {
+  const randomizeTumble = () => {
+    tumbleSpeed.current = {
+      x: (Math.random() - 0.5) * 0.55,
+      y: (Math.random() - 0.5) * 0.65,
+      z: (Math.random() - 0.5) * 0.45,
+    }
+  }
+
+  useFrame((state, delta) => {
+    if (state.clock.elapsedTime >= nextSpeedChange.current) {
+      randomizeTumble()
+      nextSpeedChange.current = state.clock.elapsedTime + 4 + Math.random() * 4
+    }
+
+    if (rootRef.current) {
+      rootRef.current.rotation.x += delta * tumbleSpeed.current.x
+      rootRef.current.rotation.y += delta * tumbleSpeed.current.y
+      rootRef.current.rotation.z += delta * tumbleSpeed.current.z
+    }
+
     if (outerRef.current) outerRef.current.rotation.z += delta * 0.12
     if (midRef.current) midRef.current.rotation.z -= delta * 0.2
     if (innerRef.current) innerRef.current.rotation.z += delta * 0.35
@@ -93,7 +119,7 @@ export function MagicCircle() {
   })
 
   return (
-    <group rotation={[Math.PI / 2, 0, 0]}>
+    <group ref={rootRef} rotation={[0.55, 0.35, 0.2]}>
       <group ref={outerRef}>
         <lineLoop>
           <circleGeometry args={[1.65, 72]} />

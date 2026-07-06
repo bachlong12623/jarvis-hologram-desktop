@@ -1,37 +1,78 @@
 # JARVIS Hologram Desktop
 
-Giao diện desktop hologram toàn màn hình — phong cách siêu máy tính JARVIS, kết hợp công nghệ (3D, HUD, metrics thật) với yếu tố huyền học phương Tây (magic circle) và Đạo giáo (bát quái, phù chú).
+Giao diện desktop hologram toàn màn hình cho **[Lively Wallpaper](https://github.com/rocksdanister/lively)** — phong cách siêu máy tính JARVIS, HUD metrics Windows thật, đồng hồ/lịch tiếng Việt, kết hợp magic circle phương Tây và phù chú/bát quái Đạo giáo.
+
+**Repository:** https://github.com/bachlong12623/jarvis-hologram-desktop
 
 ![Windows 11](https://img.shields.io/badge/Windows-11%20%7C%2010-blue)
 ![Node](https://img.shields.io/badge/Node-%3E%3D%2018-green)
+![Lively](https://img.shields.io/badge/Wallpaper-Lively-purple)
 ![License](https://img.shields.io/badge/License-MIT-lightgrey)
+
+---
+
+## Tổng quan
+
+Dự án gồm hai phần chạy song song:
+
+| Thành phần | Vai trò |
+|------------|---------|
+| **Web UI** (`src/`) | Cảnh 3D + HUD, render bởi Lively qua WebView2 |
+| **Metrics server** (`server/`) | API localhost cung cấp CPU/RAM/GPU/network thật cho HUD |
+
+Wallpaper được đóng gói từ `lively-template/LivelyInfo.json` (Type **1** = web/HTML) — tương thích bản Lively Microsoft Store (MSIX).
 
 ---
 
 ## Tính năng
 
-- **Cảnh 3D** — Quả cầu hologram nhiều lớp, shader GLSL, bloom, parallax (React Three Fiber)
-- **HUD sống** — CPU, RAM, GPU, mạng, process, uptime… đọc **thật** từ Windows
-- **Chủ đề mystic** — Vòng tròn ma thuật, bát quái, phù chú quay quanh tâm
-- **Desktop wallpaper** — Hai chế độ triển khai:
-  - **Lively Wallpaper** (khuyên dùng trên Windows 11 24H2+)
-  - **Electron** (gắn trực tiếp vào desktop layer)
+### Cảnh 3D (React Three Fiber)
+- Quả cầu hologram nhiều lớp, shader GLSL tùy chỉnh, bloom & vignette
+- Vòng xử lý (processing rings), data streams, sàn mạch điện
+- **Magic circle** vàng — xoay ngẫu nhiên 3 trục quanh tâm (không còn vạch ngang cố định)
+- **Bát quái** đỏ và phù chú quay quanh tâm
+- Parallax theo chuột
+
+### HUD overlay
+- Gauge CPU / MEM / NET / GPU
+- Biểu đồ sparkline, waveform, CPU cores, bảng process
+- Data log, module grid, status bar
+- Magic circle SVG + phù chú CSS orbiting
+
+### Đồng hồ & lịch
+- Đồng hồ số `HH:MM:SS` cập nhật mỗi giây
+- Ngày đầy đủ tiếng Việt
+- Lịch tháng dạng lưới, highlight ngày hôm nay
+- Vị trí: góc dưới bên phải
+
+### Tối ưu hiệu năng (wallpaper mode)
+Tự kích hoạt khi chạy trong Lively/WebView2 (`file:` hoặc `chrome.webview`):
+
+| Thông số | Dev (trình duyệt) | Wallpaper (Lively) |
+|----------|-------------------|---------------------|
+| FPS render 3D | ~60 | **24** |
+| DPR | 1–1.5x | **1x** |
+| Bloom mipmapBlur | Bật | **Tắt** |
+| Chromatic aberration | Bật | **Tắt** |
+| Poll metrics | 1s | **3s** |
+| Waveform canvas | 60fps | **12fps** |
+| Tạm dừng render | — | Khi desktop ẩn |
 
 ---
 
 ## Yêu cầu hệ thống
 
-| Thành phần | Phiên bản |
-|------------|-----------|
-| Windows | 10 / 11 (đã test trên 11 build 26200) |
+| Thành phần | Phiên bản / Ghi chú |
+|------------|---------------------|
+| Windows | 10 / 11 (đã test Win11 build 26200) |
 | Node.js | 18 trở lên |
 | npm | 9 trở lên |
-| Lively Wallpaper | Bản Store hoặc cài đặt thường (cho chế độ wallpaper) |
-| WebView2 | Cần cho Lively web wallpaper |
+| Lively Wallpaper | [Store](https://apps.microsoft.com/store/detail/lively-wallpaper/9ntm2qc6lrsx) hoặc [GitHub](https://github.com/rocksdanister/lively) |
+| WebView2 | Bắt buộc — Lively → Settings → Wallpaper → Web Browser → **WebView2** |
 
 ---
 
-## Cài đặt nhanh
+## Cài đặt
 
 ```powershell
 git clone https://github.com/bachlong12623/jarvis-hologram-desktop.git
@@ -41,116 +82,127 @@ npm install
 
 ---
 
-## Chế độ phát triển (xem trên trình duyệt)
-
-Chạy metrics server + Vite dev server:
+## Phát triển (xem trên trình duyệt)
 
 ```powershell
 npm run dev
 ```
 
-Mở trình duyệt tại `http://localhost:5173`. HUD sẽ hiển thị dữ liệu hệ thống thật qua proxy `/api` → port `3742`.
+- UI: `http://localhost:5173`
+- Metrics API: `http://127.0.0.1:3742` (proxy qua Vite `/api`)
+
+Chỉ chạy metrics server:
+
+```powershell
+npm run server
+```
+
+Build production:
+
+```powershell
+npm run build
+```
 
 ---
 
-## Đặt làm wallpaper — Lively (khuyên dùng)
+## Deploy lên Lively Wallpaper
 
-> **Tại sao dùng Lively?** Windows 11 24H2 thay đổi cách render desktop; Electron wallpaper có thể không hiển thị đúng. Lively Wallpaper ổn định hơn trên các bản Windows mới.
+### Bước 1 — Cài Lively
 
-### Bước 1 — Cài Lively Wallpaper
+Tải và cài Lively Wallpaper (Store hoặc bản portable).
 
-Tải từ [Microsoft Store](https://apps.microsoft.com/store/detail/lively-wallpaper/9ntm2qc6lrsx) hoặc [GitHub Lively](https://github.com/rocksdanister/lively).
-
-### Bước 2 — Build & deploy package
+### Bước 2 — Deploy package
 
 ```powershell
-npm run wallpaper:lively
+npm run deploy
 ```
 
-Script sẽ:
-1. Build production (`dist/`)
-2. Đóng gói wallpaper web (`Type: 1`) vào thư mục Lively
+Script `scripts/deploy-lively.ps1` sẽ:
+
+1. `npm run build` → tạo `dist/`
+2. Đóng gói với `lively-template/LivelyInfo.json` vào thư mục tạm
 3. Khởi động metrics server
-4. Copy vào `%LOCALAPPDATA%\Lively Wallpaper\Library\wallpapers\jarvis-hologram`
+4. Copy vào:
+   ```
+   %LOCALAPPDATA%\Lively Wallpaper\Library\wallpapers\jarvis-hologram
+   ```
 
 ### Bước 3 — Áp dụng trong Lively
 
 1. Mở **Lively Wallpaper**
-2. Chuột phải thư viện → **Refresh** (hoặc khởi động lại Lively)
+2. Chuột phải thư viện → **Refresh** (hoặc restart Lively)
 3. Chọn **JARVIS Hologram** → **Apply**
 
-### Bước 4 — Metrics server khi khởi động Windows
+### Bước 4 — Metrics khi khởi động Windows (khuyên dùng)
 
-HUD cần server metrics chạy nền. Sau lần chạy `wallpaper:lively`, script `start-metrics.ps1` đã được tạo.
+HUD cần metrics server chạy nền. Cài vào Startup:
+
+```powershell
+npm run metrics:install
+```
+
+Gỡ khỏi Startup:
+
+```powershell
+npm run metrics:uninstall
+```
 
 Chạy thủ công:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\start-metrics.ps1
+npm run metrics
 ```
 
-Tự chạy khi đăng nhập — tạo shortcut trong Startup:
+Kiểm tra server:
 
-```powershell
-$startup = [Environment]::GetFolderPath('Startup')
-$wsh = New-Object -ComObject WScript.Shell
-$lnk = $wsh.CreateShortcut("$startup\JARVIS-Metrics.lnk")
-$lnk.TargetPath = 'powershell.exe'
-$lnk.Arguments = "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PWD\scripts\start-metrics.ps1`""
-$lnk.WorkingDirectory = $PWD
-$lnk.Save()
 ```
-
-### Xử lý sự cố Lively
-
-| Lỗi / Triệu chứng | Cách xử lý |
-|-------------------|------------|
-| `WallpaperPluginNotFoundException` / MSIX program not allowed | Package phải là **web** (`Type: 1`). Chạy lại `npm run wallpaper:lively` |
-| Màn hình đen / không load | Lively → **Settings → Wallpaper → Web Browser → WebView2** |
-| HUD hiện `OFFLINE` | Chạy `scripts\start-metrics.ps1`, kiểm tra `http://127.0.0.1:3742/api/health` |
+http://127.0.0.1:3742/api/health
+```
 
 ---
 
-## Đặt làm wallpaper — Electron (thay thế)
+## `lively-template`
 
-```powershell
-# Chạy một lần
-npm run wallpaper
+Manifest Lively — **không sửa `Type` thành 0** (program bị chặn trên MSIX Store):
 
-# Cài tự khởi động khi đăng nhập Windows
-npm run wallpaper:install
+```json
+{
+  "Type": 1,
+  "FileName": "index.html",
+  "Title": "JARVIS Hologram"
+}
 ```
 
-Dừng wallpaper:
-
-```powershell
-npm run wallpaper:stop
-```
-
-Log: `%LOCALAPPDATA%\JARVIS-Wallpaper\wallpaper.log`
-
-> Trên Windows 11 24H2+, nếu desktop vẫn hiện wallpaper Bloom mặc định, hãy dùng **Lively** thay vì Electron.
+Vite build dùng `base: './'` để asset load đúng trong WebView2.
 
 ---
 
 ## Ẩn / hiện icon Desktop
 
-Để giao diện hologram sạch hơn:
+Giao diện sạch hơn khi ẩn icon:
 
-1. Chuột phải vùng trống trên **Desktop**
-2. **View** → bỏ tick **Show desktop icons** (ẩn)
-3. Bật lại tick để hiện icon
+1. Chuột phải vùng trống Desktop → **View**
+2. Bỏ tick **Show desktop icons**
 
-**Ẩn taskbar tự động:** Settings → Personalization → Taskbar → Taskbar behaviors → **Automatically hide the taskbar**
-
-### Toggle bằng PowerShell (tùy chọn)
+Toggle bằng script:
 
 ```powershell
-$path = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced'
-$current = (Get-ItemProperty -Path $path -Name HideIcons -ErrorAction SilentlyContinue).HideIcons
-Set-ItemProperty -Path $path -Name HideIcons -Value ($(if ($current -eq 1) { 0 } else { 1 }))
-Stop-Process -Name explorer -Force
+powershell -ExecutionPolicy Bypass -File scripts\toggle-desktop-icons.ps1
 ```
+
+**Ẩn taskbar tự động:** Settings → Personalization → Taskbar → **Automatically hide the taskbar**
+
+---
+
+## Xử lý sự cố
+
+| Triệu chứng | Nguyên nhân | Cách xử lý |
+|-------------|-------------|------------|
+| `WallpaperPluginNotFoundException` | Package kiểu program (Type 0) | Chạy lại `npm run deploy` — phải là Type 1 |
+| Màn hình đen / không load | WebView thiếu | Lively → Web Browser → **WebView2** |
+| HUD hiện `OFFLINE` | Metrics server tắt | `npm run metrics` hoặc `npm run metrics:install` |
+| CPU cao (`msedgewebview2.exe`) | WebGL render liên tục | Lively → Pause khi fullscreen; app đã giới hạn 24fps |
+| Không thấy thay đổi sau build | Cache Lively | Refresh thư viện hoặc restart Lively |
 
 ---
 
@@ -159,13 +211,13 @@ Stop-Process -Name explorer -Force
 | Lệnh | Mô tả |
 |------|--------|
 | `npm run dev` | Metrics server + Vite dev |
-| `npm run build` | Build production vào `dist/` |
-| `npm run server` | Chỉ chạy metrics server (port 3742) |
-| `npm run wallpaper:lively` | Build + deploy Lively package |
-| `npm run wallpaper` | Build + chạy Electron wallpaper |
-| `npm run wallpaper:install` | Cài shortcut Startup (Electron) |
-| `npm run wallpaper:stop` | Dừng Electron wallpaper |
-| `npm run wallpaper:dev` | Dev mode với Electron wallpaper |
+| `npm run server` | Chỉ metrics server (port 3742) |
+| `npm run build` | Build production → `dist/` |
+| `npm run preview` | Xem bản build local |
+| `npm run deploy` | Build + deploy package Lively |
+| `npm run metrics` | Khởi động metrics server |
+| `npm run metrics:install` | Thêm `JARVIS-Metrics.lnk` vào Windows Startup |
+| `npm run metrics:uninstall` | Gỡ shortcut Startup |
 | `npm run lint` | Chạy Oxlint |
 
 ---
@@ -173,29 +225,46 @@ Stop-Process -Name explorer -Force
 ## Cấu trúc dự án
 
 ```
+jarvis-hologram-desktop/
 ├── src/
-│   ├── components/          # Scene 3D + HUD overlay
-│   │   ├── hud/             # Panels, gauges, talismans
-│   │   ├── HologramSphere.tsx
-│   │   ├── MagicCircle.tsx
-│   │   ├── TaoBagua.tsx
-│   │   └── Experience.tsx
-│   └── hooks/
-│       └── useSystemMetrics.ts
+│   ├── components/
+│   │   ├── Experience.tsx         # Canvas R3F + postprocessing
+│   │   ├── HologramSphere.tsx     # Quả cầu hologram chính
+│   │   ├── MagicCircle.tsx        # Vòng ma thuật 3D (xoay ngẫu nhiên)
+│   │   ├── TaoBagua.tsx           # Bát quái đỏ
+│   │   ├── DataStreams.tsx        # Particle streams
+│   │   ├── ProcessingRings.tsx    # Vòng xử lý
+│   │   ├── CircuitPlatform.tsx    # Sàn mạch
+│   │   ├── RenderLoop.tsx         # Giới hạn FPS wallpaper
+│   │   ├── HudOverlay.tsx         # HUD tổng
+│   │   └── hud/
+│   │       ├── DateTimeClock.tsx  # Đồng hồ + lịch
+│   │       ├── RadialGauge.tsx
+│   │       ├── Sparkline.tsx
+│   │       ├── Waveform.tsx
+│   │       ├── ProcessTable.tsx
+│   │       ├── TaoTalismans.tsx
+│   │       └── ...
+│   ├── hooks/
+│   │   ├── useSystemMetrics.ts    # Poll metrics API
+│   │   └── useMouseParallax.ts
+│   ├── shaders/hologram.ts        # GLSL shaders
+│   └── utils/
+│       ├── performanceMode.ts     # Profile hiệu năng wallpaper
+│       └── hudData.ts
 ├── server/
-│   ├── index.ts             # Express API :3742
-│   └── collectMetrics.ts    # Thu thập metrics Windows
-├── electron/
-│   ├── main.cjs             # Electron wallpaper window
-│   └── wallpaper-win.cjs    # Win32 desktop attach
+│   ├── index.ts                   # Express :3742
+│   └── collectMetrics.ts          # systeminformation
+├── lively-template/
+│   └── LivelyInfo.json            # Manifest Lively (Type 1)
 ├── scripts/
-│   ├── setup-lively.ps1     # Deploy Lively wallpaper
-│   ├── start-metrics.ps1    # Khởi động metrics server
-│   ├── start-wallpaper.ps1  # Khởi động Electron wallpaper
-│   ├── install-wallpaper.ps1
-│   └── toggle-desktop-icons.ps1  # Ẩn/hiện icon desktop
-└── lively-template/
-    └── LivelyInfo.json      # Metadata package Lively
+│   ├── deploy-lively.ps1          # Build + deploy
+│   ├── start-metrics.ps1          # Chạy metrics nền
+│   ├── install-metrics-startup.ps1
+│   ├── uninstall-metrics-startup.ps1
+│   └── toggle-desktop-icons.ps1
+├── vite.config.ts                 # base: './' cho Lively
+└── dist/                          # Build output (gitignored)
 ```
 
 ---
@@ -204,20 +273,32 @@ Stop-Process -Name explorer -Force
 
 | Endpoint | Mô tả |
 |----------|--------|
-| `GET /api/health` | Trạng thái server |
-| `GET /api/metrics` | CPU, RAM, GPU, network, processes… |
+| `GET /api/health` | `{ ok, port, ready }` |
+| `GET /api/metrics` | CPU, RAM, GPU, network, processes, uptime, hostname… |
 
-Port mặc định: **3742** (đổi bằng biến `METRICS_PORT`).
+- Port mặc định: **3742**
+- Đổi port: biến môi trường `METRICS_PORT`
 
 ---
 
-## Công nghệ sử dụng
+## Công nghệ
 
-- [React 19](https://react.dev) + [TypeScript](https://www.typescriptlang.org)
-- [Vite 8](https://vitejs.dev)
-- [React Three Fiber](https://docs.pmnd.rs/react-three-fiber) + [Drei](https://github.com/pmndrs/drei) + [Postprocessing](https://github.com/pmndrs/postprocessing)
-- [Express](https://expressjs.com) + [systeminformation](https://github.com/sebhildebrandt/systeminformation)
-- [Electron](https://www.electronjs.org) + [Lively Wallpaper](https://github.com/rocksdanister/lively)
+| Layer | Stack |
+|-------|--------|
+| UI | React 19, TypeScript, Vite 8 |
+| 3D | Three.js, React Three Fiber, Postprocessing |
+| HUD | CSS + Canvas 2D |
+| Backend | Express 5, systeminformation |
+| Wallpaper | Lively Wallpaper + WebView2 |
+
+---
+
+## Lịch sử thay đổi chính
+
+- **v1.0** — Chỉ dùng Lively (đã gỡ Electron)
+- HUD metrics Windows thật, đồng hồ/lịch tiếng Việt
+- Tối ưu CPU cho WebView2 (24fps, giảm postprocessing)
+- Magic circle xoay ngẫu nhiên 3 trục
 
 ---
 

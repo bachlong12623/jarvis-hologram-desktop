@@ -3,7 +3,9 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { hologramVertex, hologramFragment } from '../shaders/hologram'
 
-const SEGMENTS = 32
+import { perf } from '../utils/performanceMode'
+
+const SEGMENTS = perf.sphereSegments
 
 function createHologramMaterial(color: string, opacity: number, fresnelPower: number) {
   return new THREE.ShaderMaterial({

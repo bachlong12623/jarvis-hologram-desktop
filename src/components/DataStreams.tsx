@@ -1,9 +1,10 @@
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import { perf } from '../utils/performanceMode'
 
-const STREAM_COUNT = 12
-const BITS_PER_STREAM = 24
+const STREAM_COUNT = perf.dataStreams.streams
+const BITS_PER_STREAM = perf.dataStreams.bits
 
 export function DataStreams() {
   const groupRef = useRef<THREE.Group>(null)
