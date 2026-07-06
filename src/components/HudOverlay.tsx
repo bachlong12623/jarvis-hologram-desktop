@@ -11,6 +11,7 @@ import { ProcessTable } from './hud/ProcessTable'
 import { Sparkline } from './hud/Sparkline'
 import { MagicCircleHud } from './hud/MagicCircleHud'
 import { TaoTalismans } from './hud/TaoTalismans'
+import { DateTimeClock } from './hud/DateTimeClock'
 
 type HudOverlayProps = {
   mouseRef: RefObject<MousePosition>
@@ -151,6 +152,8 @@ export function HudOverlay({ mouseRef: _mouseRef }: HudOverlayProps) {
           NET: {data.networkMBps.toFixed(2)} MB/s
         </span>
       </div>
+
+      <DateTimeClock />
 
       <div className="hud-mystic-layer">
         <MagicCircleHud />
