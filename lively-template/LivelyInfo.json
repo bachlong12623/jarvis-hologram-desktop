@@ -1,0 +1,14 @@
+{
+  "AppVersion": "1.0.0",
+  "Title": "JARVIS Hologram",
+  "Thumbnail": "lively_t.jpg",
+  "Preview": null,
+  "Desc": "Futuristic hologram desktop with live Windows system metrics",
+  "Author": "UI Project",
+  "License": null,
+  "Contact": "",
+  "Type": 1,
+  "FileName": "index.html",
+  "Arguments": null,
+  "IsAbsolutePath": false
+}
